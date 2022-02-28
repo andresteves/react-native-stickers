@@ -123,14 +123,10 @@ export default class StickerPicker extends Component<Props> {
 
     if(this._isMounted) {
       this.currentPanValue = {x: 0, y: 0};
-      this.panListener = this.state.pan.addListener((value) => this.currentPanValue = value);
     }
   }
 
   componentWillUnmount() {
-    if(this._isMounted) {
-      this.state.pan.removeListener(this.panListener);
-    }
 
     this._isMounted = false;
   }
@@ -156,7 +152,6 @@ export default class StickerPicker extends Component<Props> {
     if(this._isMounted) {
       this.setState({
         finalImage: null,
-        pan: new Animated.ValueXY(),
         showSticker: false,
       })
     }
