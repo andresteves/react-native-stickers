@@ -8,13 +8,19 @@ import {
   Image,
   ImageBackground,
   Modal,
-  PanResponder,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Text,
   View
 } from 'react-native';
+
+import {
+  PanGestureHandler,
+  PinchGestureHandler,
+  RotationGestureHandler,
+  State,
+} from 'react-native-gesture-handler';
 
 const ghost      = require('./emojis/ghost.png');
 const heart      = require('./emojis/heart.png');
@@ -26,6 +32,10 @@ const smile      = require('./emojis/smile.png');
 const sunglasses = require('./emojis/sunglasses.png');
 const thumbsup   = require('./emojis/thumbsup.png');
 
+const USE_NATIVE_DRIVER = false; // https://github.com/kmagiera/react-native-gesture-handler/issues/71
+const MINIMUM_STICKER_SCALE = 0.5;
+const MAXIMUM_STICKER_SCALE = 3;
+
 type Props = {};
 export default class StickerPicker extends Component<Props> {
   constructor(props) {
@@ -36,30 +46,77 @@ export default class StickerPicker extends Component<Props> {
       showSticker: false,
     };
 
-    this.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event([
-        null,
-        {
-          dx: this.state.pan.x,
-          dy: this.state.pan.y,
-        },
-      ]),
-      onPanResponderRelease: (e, gesture) => {
-        this.state.pan.setOffset(
-          {
-            x: this.currentPanValue.x,
-            y: this.currentPanValue.y
-          }
-        );
-        this.state.pan.setValue(
-          {
-            x: 0,
-            y: 0
-          }
-        );
-      },
+    /* Pinching */
+    this.baseScale = new Animated.Value(1);
+    this.pinchScale = new Animated.Value(1);
+    this.scale = this.pinchScale.interpolate({
+      inputRange: [MINIMUM_STICKER_SCALE, MAXIMUM_STICKER_SCALE],
+      outputRange: [MINIMUM_STICKER_SCALE, MAXIMUM_STICKER_SCALE],
+      extrapolate: 'clamp',
     });
+    this.lastScale = 1;
+
+    this.onPinchGestureEvent = Animated.event(
+      [{nativeEvent: {scale: this.pinchScale}}],
+      {useNativeDriver: USE_NATIVE_DRIVER},
+    );
+
+    /* Rotation */
+    this.rotate = new Animated.Value(0);
+    this.rotateStr = this.rotate.interpolate({
+      inputRange: [-100, 100],
+      outputRange: ['-100rad', '100rad'],
+    });
+    this.lastRotate = 0;
+    this.onRotateGestureEvent = Animated.event(
+      [{nativeEvent: {rotation: this.rotate}}],
+      {useNativeDriver: USE_NATIVE_DRIVER},
+    );
+
+    /* Pan */
+    this.translateX = new Animated.Value(0);
+    this.translateY = new Animated.Value(0);
+    this.lastOffset = {x: 0, y: 0};
+    this.onPanGestureEvent = Animated.event(
+      [
+        {
+          nativeEvent: {
+            translationX: translateX,
+            translationY: translateY,
+          },
+        },
+      ],
+      {useNativeDriver: USE_NATIVE_DRIVER},
+    );
+  }
+
+  _onRotateHandlerStateChange = (event) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      this.lastRotate += event.nativeEvent.rotation;
+      this.rotate.setOffset(this.lastRotate);
+      this.rotate.setValue(0);
+    }
+  }
+
+  _onPinchHandlerStateChange = (event) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      this.lastScale *= event.nativeEvent.scale;
+      this.baseScale.setValue(this.lastScale);
+      // this.pinchScale.setValue(1);
+    }
+  }
+
+  _onPanStateChange = (event) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      setLastOffset({
+        x: lastOffset + event.nativeEvent.translationX,
+        y: lastOffset + event.nativeEvent.translationY,
+      });
+      translateX.setOffset(lastOffset.x);
+      setTranslateX(new Animated(0));
+      translateY.setOffset(lastOffset.y);
+      setTranslateY(new Animated(0));
+    }
   }
 
   componentDidMount() {
@@ -115,6 +172,10 @@ export default class StickerPicker extends Component<Props> {
         />
       )
     }
+  }
+
+  generateRandomId() {
+    return Math.floor(Math.random() * 100) + 1;
   }
 
   render() {
@@ -177,15 +238,36 @@ export default class StickerPicker extends Component<Props> {
                 style={[styles.attachment, this.props.imageStyle]}
               >
               { showSticker && this._isMounted &&  (
-                <Animated.View
-                  {...this.panResponder.panHandlers}
-                  style={[this.state.pan.getLayout()]}
-                >
-                <Image
-                  style={{width: this.props.stickerSize, height: this.props.stickerSize}}
-                  source={sticker}
-                />
-                </Animated.View>
+                <PanGestureHandler
+                  key={'view' + generateRandomId()}
+                  {...this.props}
+                  onGestureEvent={this.onPanGestureEvent}
+                  onHandlerStateChange={this.onPanStateChange}
+                  id={'image_drag' + generateRandomId()}
+                  shouldCancelWhenOutside={true}>
+                  <RotationGestureHandler
+                    id={'image_rotation' + generateRandomId()}
+                    onGestureEvent={this.onRotateGestureEvent}
+                    onHandlerStateChange={this.onRotateHandlerStateChange}>
+                    <PinchGestureHandler
+                      id={'image_pinch' + generateRandomId()}
+                      onGestureEvent={this.onPinchGestureEvent}
+                      onHandlerStateChange={this.onPinchHandlerStateChange}>
+                      <Animated.View
+                        style={[localStyles.stickerContainer, this.state.pan.getLayout(), {transform: [{translateX: this.translateX}, {translateY: this.translateY}],}]}
+                      >
+                      <Image
+                        style={{width: this.props.stickerSize, height: this.props.stickerSize, transform: [
+                            {perspective: 200},
+                            {scale: this.scale},
+                            {rotate: this.rotateStr},
+                          ],}}
+                        source={sticker}
+                      />
+                      </Animated.View>
+                    </PinchGestureHandler>
+                  </RotationGestureHandler>
+                </PanGestureHandler>
               )}
               </ImageBackground>
             </ViewShot>
@@ -209,6 +291,30 @@ export default class StickerPicker extends Component<Props> {
     );
   }
 }
+
+const imageSize = 500;
+const stickerCanvasSize = imageSize * 2;
+const localStyles = StyleSheet.create({
+  stickerContainer: {
+    position: 'absolute',
+    height: stickerCanvasSize * 3,
+    width: stickerCanvasSize,
+    alignItems: 'center',
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
+  stickerScreen: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
+    resizeMode: 'contain',
+    width: 300,
+    height: 300,
+    zIndex: 9,
+  },
+});
 
 let { height, width } = Dimensions.get('window');
 const styles = StyleSheet.create({
