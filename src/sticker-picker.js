@@ -81,8 +81,8 @@ export default class StickerPicker extends Component<Props> {
       [
         {
           nativeEvent: {
-            translationX: translateX,
-            translationY: translateY,
+            translationX: this.translateX,
+            translationY: this.translateY,
           },
         },
       ],
