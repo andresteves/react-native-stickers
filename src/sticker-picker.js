@@ -239,18 +239,18 @@ export default class StickerPicker extends Component<Props> {
               >
               { showSticker && this._isMounted &&  (
                 <PanGestureHandler
-                  key={'view' + generateRandomId()}
+                  key={'view' + this.generateRandomId()}
                   {...this.props}
                   onGestureEvent={this.onPanGestureEvent}
                   onHandlerStateChange={this.onPanStateChange}
-                  id={'image_drag' + generateRandomId()}
+                  id={'image_drag' + this.generateRandomId()}
                   shouldCancelWhenOutside={true}>
                   <RotationGestureHandler
-                    id={'image_rotation' + generateRandomId()}
+                    id={'image_rotation' + this.generateRandomId()}
                     onGestureEvent={this.onRotateGestureEvent}
                     onHandlerStateChange={this.onRotateHandlerStateChange}>
                     <PinchGestureHandler
-                      id={'image_pinch' + generateRandomId()}
+                      id={'image_pinch' + this.generateRandomId()}
                       onGestureEvent={this.onPinchGestureEvent}
                       onHandlerStateChange={this.onPinchHandlerStateChange}>
                       <Animated.View
