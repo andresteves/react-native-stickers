@@ -42,7 +42,6 @@ export default class StickerPicker extends Component<Props> {
     super(props);
 
     this.state = {
-      pan: new Animated.ValueXY(),
       showSticker: false,
     };
 
@@ -254,9 +253,9 @@ export default class StickerPicker extends Component<Props> {
                       onGestureEvent={this.onPinchGestureEvent}
                       onHandlerStateChange={this.onPinchHandlerStateChange}>
                       <Animated.View
-                        style={[localStyles.stickerContainer, this.state.pan.getLayout(), {transform: [{translateX: this.translateX}, {translateY: this.translateY}],}]}
+                        style={[localStyles.stickerContainer, {transform: [{translateX: this.translateX}, {translateY: this.translateY}],}]}
                       >
-                      <Image
+                      <Animated.Image
                         style={{width: this.props.stickerSize, height: this.props.stickerSize, transform: [
                             {perspective: 200},
                             {scale: this.scale},
