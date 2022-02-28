@@ -251,11 +251,11 @@ export default class StickerPicker extends Component<Props> {
                         style={[localStyles.stickerContainer, {transform: [{translateX: this.translateX}, {translateY: this.translateY}],}]}
                       >
                       <Animated.Image
-                        style={{width: this.props.stickerSize, height: this.props.stickerSize, transform: [
+                        style={[localStyles.stickerScreen, {transform: [
                             {perspective: 200},
                             {scale: this.scale},
                             {rotate: this.rotateStr},
-                          ],}}
+                          ],}]}
                         source={sticker}
                       />
                       </Animated.View>
