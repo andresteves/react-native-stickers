@@ -89,7 +89,7 @@ export default class StickerPicker extends Component<Props> {
     );
   }
 
-  _onRotateHandlerStateChange = (event) => {
+  _onRotateHandlerStateChange = event => {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastRotate += event.nativeEvent.rotation;
       this.rotate.setOffset(this.lastRotate);
@@ -97,7 +97,7 @@ export default class StickerPicker extends Component<Props> {
     }
   }
 
-  _onPinchHandlerStateChange = (event) => {
+  _onPinchHandlerStateChange = event => {
     console.log(event);
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastScale *= event.nativeEvent.scale;
@@ -106,7 +106,7 @@ export default class StickerPicker extends Component<Props> {
     }
   }
 
-  _onPanStateChange = (event) => {
+  _onPanStateChange = event => {
     if (event.nativeEvent.oldState === State.ACTIVE) {
       console.log(event);
       setLastOffset({
@@ -225,7 +225,7 @@ export default class StickerPicker extends Component<Props> {
             >
               <ImageBackground
                 ref={image => (this.imageComponent = image)}
-                source={{ uri: imageSource }}
+                source={imageSource}
                 style={[styles.attachment, this.props.imageStyle]}
               >
               { showSticker && this._isMounted &&  (
