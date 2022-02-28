@@ -98,6 +98,7 @@ export default class StickerPicker extends Component<Props> {
   }
 
   _onPinchHandlerStateChange = (event) => {
+    console.log(event);
     if (event.nativeEvent.oldState === State.ACTIVE) {
       this.lastScale *= event.nativeEvent.scale;
       this.baseScale.setValue(this.lastScale);
@@ -107,6 +108,7 @@ export default class StickerPicker extends Component<Props> {
 
   _onPanStateChange = (event) => {
     if (event.nativeEvent.oldState === State.ACTIVE) {
+      console.log(event);
       setLastOffset({
         x: lastOffset + event.nativeEvent.translationX,
         y: lastOffset + event.nativeEvent.translationY,
@@ -120,14 +122,9 @@ export default class StickerPicker extends Component<Props> {
 
   componentDidMount() {
     this._isMounted = true;
-
-    if(this._isMounted) {
-      this.currentPanValue = {x: 0, y: 0};
-    }
   }
 
   componentWillUnmount() {
-
     this._isMounted = false;
   }
 
@@ -236,17 +233,17 @@ export default class StickerPicker extends Component<Props> {
                   key={'view' + this.generateRandomId()}
                   {...this.props}
                   onGestureEvent={this.onPanGestureEvent}
-                  onHandlerStateChange={this.onPanStateChange}
+                  onHandlerStateChange={this._onPanStateChange}
                   id={'image_drag' + this.generateRandomId()}
                   shouldCancelWhenOutside={true}>
                   <RotationGestureHandler
                     id={'image_rotation' + this.generateRandomId()}
                     onGestureEvent={this.onRotateGestureEvent}
-                    onHandlerStateChange={this.onRotateHandlerStateChange}>
+                    onHandlerStateChange={this._onRotateHandlerStateChange}>
                     <PinchGestureHandler
                       id={'image_pinch' + this.generateRandomId()}
                       onGestureEvent={this.onPinchGestureEvent}
-                      onHandlerStateChange={this.onPinchHandlerStateChange}>
+                      onHandlerStateChange={this._onPinchHandlerStateChange}>
                       <Animated.View
                         style={[localStyles.stickerContainer, {transform: [{translateX: this.translateX}, {translateY: this.translateY}],}]}
                       >
